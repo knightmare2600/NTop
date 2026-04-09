@@ -1,9 +1,8 @@
-name: NTop PR CI
+name: CI Build
 
 on:
   pull_request:
-    branches:
-      - master
+    branches: [master]
   workflow_dispatch:
 
 jobs:
@@ -16,7 +15,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Configure CMake
         run: cmake -A ${{ matrix.arch }} -B build-${{ matrix.arch }} -DCMAKE_BUILD_TYPE=Release .
@@ -24,8 +23,12 @@ jobs:
       - name: Build
         run: cmake --build build-${{ matrix.arch }} --config Release
 
+      - name: Package output (ZIP)
+        run: |
+          powershell -Command "Compress-Archive -Path build-${{ matrix.arch }}/Release/* -DestinationPath ntop-${{ matrix.arch }}.zip"
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ntop-${{ matrix.arch }}
-          path: build-${{ matrix.arch }}/Release/
+          path: ntop-${{ matrix.arch }}.zip
